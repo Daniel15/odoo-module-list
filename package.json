@@ -1,0 +1,23 @@
+{
+  "name": "@daniel15/odoomodules",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "tsc --noEmit && eslint && prettier --check .",
+    "lint-fix": "eslint --fix && prettier --write .",
+    "scrape": "node src/scraper/scraper.ts"
+  },
+  "dependencies": {
+    "octokit": "^4.1.0"
+  },
+  "devDependencies": {
+    "@daniel15/standard": "file:../daniel15-standard/packages/standard",
+    "@types/node": "^25.2.0",
+    "eslint": "^9.0.0",
+    "jiti": "^2.6.1",
+    "prettier": "3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  }
+}
