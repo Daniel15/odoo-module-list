@@ -1,5 +1,17 @@
 {
-  "extends": ["@daniel15/standard/tsconfig/node.json"],
-  "include": ["**/*"],
-  "exclude": ["node_modules", "**/dist"]
+  "extends": ["astro/tsconfigs/strict"],
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "paths": {
+      "@components/*": ["./src/components/*"],
+      "@layouts/*": ["./src/layouts/*"]
+    },
+    "verbatimModuleSyntax": true
+  },
+  "plugins": [
+    {
+      "name": "@astrojs/ts-plugin"
+    }
+  ]
 }

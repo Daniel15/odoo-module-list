@@ -1,0 +1,68 @@
+---
+import {ODOO_VERSIONS} from '../consts';
+import type {ModuleInfo, ModuleManifest, RepoOutput} from '../schemas';
+
+export interface Props {
+  repo: RepoOutput;
+}
+
+const {repo} = Astro.props;
+
+// Filter the modules to just the modules that are included in at least one of
+// the versions we want to show.
+const modules = Object.entries(repo.modules)
+  .map(([internalName, module]) => ({...module, internalName}))
+  .filter(module => ODOO_VERSIONS.some(version => module.versions[version] != null))
+  .sort((a, b) => a.internalName.localeCompare(b.internalName));
+
+function getLatestAvailableVersion(module: ModuleInfo): ModuleManifest {
+  for (let i = ODOO_VERSIONS.length - 1; i >= 0; i--) {
+    const version = ODOO_VERSIONS[i];
+    if (module.versions[version] != null) {
+      return module.versions[version];
+    }
+  }
+  throw new Error('Module has no available versions!');
+}
+---
+
+{
+  modules.length > 0 && (
+    <>
+      <h2>{repo.repo}</h2>
+
+      <table class="table table-striped">
+        <thead>
+          <th scope="col">Name</th>
+          {ODOO_VERSIONS.map(version => (
+            <th class="version" scope="col">
+              v{version}
+            </th>
+          ))}
+        </thead>
+        <tbody>
+          {modules.map(module => (
+            <tr>
+              <td>
+                <a href={repo.url} target="blank">
+                  {module.internalName}
+                </a>
+                <br />
+                <span class="small text-muted">{getLatestAvailableVersion(module).summary}</span>
+              </td>
+              {ODOO_VERSIONS.map(version => (
+                <td>{module.versions[version] ? '✅' : '❌'}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )
+}
+
+<style>
+  th.version {
+    width: 0;
+  }
+</style>

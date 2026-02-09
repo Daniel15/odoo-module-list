@@ -1,4 +1,4 @@
 import {defineConfig} from 'eslint/config';
-import {getStandardESLintConfig} from '@daniel15/standard/eslint';
+import {getStandardESLintAstroConfig} from '@daniel15/standard-astro/eslint';
 
-export default defineConfig(getStandardESLintConfig({baseDir: import.meta.dirname}));
+export default defineConfig(getStandardESLintAstroConfig({baseDir: import.meta.dirname}));

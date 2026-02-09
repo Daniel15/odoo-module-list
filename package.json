@@ -4,19 +4,32 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "astro": "astro",
+    "build": "astro build",
+    "dev": "astro dev",
     "lint": "tsc --noEmit && eslint && prettier --check .",
     "lint-fix": "eslint --fix && prettier --write .",
+    "preview": "astro preview",
     "scrape": "node src/scraper/scraper.ts"
   },
   "dependencies": {
-    "octokit": "^4.1.0"
+    "astro": "^5.17.1",
+    "astro-purgecss": "^5.3.0",
+    "bootstrap": "^5.3.8",
+    "octokit": "^4.1.0",
+    "purgecss": "^7.0.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@astrojs/ts-plugin": "^1.10.6",
     "@daniel15/standard": "file:../daniel15-standard/packages/standard",
+    "@daniel15/standard-astro": "file:../daniel15-standard/packages/standard-astro",
     "@types/node": "^25.2.0",
     "eslint": "^9.0.0",
     "jiti": "^2.6.1",
     "prettier": "3.8.1",
+    "prettier-plugin-astro": "^0.14.1",
+    "sass": "^1.97.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.54.0"
   }

@@ -10,17 +10,17 @@ import {
   checkRateLimit,
 } from './github.ts';
 import {getModuleManifest} from './manifest.ts';
-import type {RepoOutput, ModuleInfo} from '../types.ts';
+import type {RepoOutput, ModuleInfo} from '../schemas.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const OUTPUT_DIR = join(__dirname, '..', 'output');
+const OUTPUT_DIR = join(__dirname, '..', '..', 'data');
 
 const CONCURRENCY = 5;
 
 function getGhToken(): string {
-  if (process.env['GITHUB_TOKEN']) {
-    return process.env['GITHUB_TOKEN'];
+  if (process.env.GITHUB_TOKEN) {
+    return process.env.GITHUB_TOKEN;
   }
   try {
     return execSync('gh auth token', {encoding: 'utf-8'}).trim();
