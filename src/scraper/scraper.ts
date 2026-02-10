@@ -1,5 +1,5 @@
 import {execSync} from 'node:child_process';
-import {stat, mkdir, writeFile} from 'node:fs/promises';
+import {mkdir, writeFile} from 'node:fs/promises';
 import {join, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
@@ -7,16 +7,18 @@ import {
   listRepos,
   getVersionBranches,
   getModulesInBranch,
+  getMigrationPRs,
   checkRateLimit,
+  type ParsedMigrationPR,
 } from './github.ts';
 import {getModuleManifest} from './manifest.ts';
-import type {RepoOutput, ModuleInfo} from '../schemas.ts';
+import type {RepoOutput} from '../schemas.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const OUTPUT_DIR = join(__dirname, '..', '..', 'data');
 
-const CONCURRENCY = 5;
+const CONCURRENCY = 50;
 
 function getGhToken(): string {
   if (process.env.GITHUB_TOKEN) {
@@ -51,18 +53,8 @@ async function runWithConcurrency<T>(
   await Promise.all(workers);
 }
 
-async function processRepo(repo: string, force: boolean): Promise<void> {
+async function processRepo(repo: string): Promise<void> {
   const outputPath = join(OUTPUT_DIR, `${repo}.json`);
-  if (!force) {
-    try {
-      await stat(outputPath);
-      console.error(`  Skipping ${repo} (already exists)`);
-      return;
-    } catch {
-      // File doesn't exist, proceed
-    }
-  }
-
   const branches = await getVersionBranches(repo);
   if (branches.length === 0) {
     console.error(`  Skipping ${repo} (no version branches)`);
@@ -100,8 +92,33 @@ async function processRepo(repo: string, force: boolean): Promise<void> {
         continue;
       }
 
-      output.modules[mod] ??= {versions: {}} as ModuleInfo;
+      output.modules[mod] ??= {versions: {}};
       output.modules[mod].versions[branch.name] = manifest;
+    }
+  }
+
+  // Fetch open migration PRs
+  let migrationPRs: ParsedMigrationPR[];
+  try {
+    migrationPRs = await getMigrationPRs(repo);
+  } catch (err: unknown) {
+    console.error(`    Error fetching migration PRs for ${repo}: ${String(err)}`);
+    migrationPRs = [];
+  }
+
+  if (migrationPRs.length > 0) {
+    console.error(`    Found ${String(migrationPRs.length)} open migration PRs`);
+    for (const migrationPR of migrationPRs) {
+      const mod = migrationPR.moduleName;
+      const ver = migrationPR.version;
+      // Only add migration PR if there's no existing manifest for this version
+      const hasExistingVersion = mod in output.modules && ver in output.modules[mod].versions;
+      if (!hasExistingVersion) {
+        if (!(mod in output.modules)) {
+          output.modules[mod] = {versions: {}};
+        }
+        output.modules[mod].versions[ver] = {migrationPR: migrationPR.pr};
+      }
     }
   }
 
@@ -114,8 +131,6 @@ async function processRepo(repo: string, force: boolean): Promise<void> {
 }
 
 async function main() {
-  const force = process.argv.includes('--force');
-
   const token = getGhToken();
   initOctokit(token);
 
@@ -131,7 +146,7 @@ async function main() {
     console.error(`[${String(processed)}/${String(repos.length)}] ${repo}`);
 
     try {
-      await processRepo(repo, force);
+      await processRepo(repo);
     } catch (err: unknown) {
       console.error(`  Error processing ${repo}: ${String(err)}`);
     }

@@ -1,6 +1,7 @@
 ---
 import {ODOO_VERSIONS} from '../consts';
-import type {ModuleInfo, ModuleManifest, RepoOutput} from '../schemas';
+import type {ModuleInfo, RepoOutput} from '../schemas';
+import ModuleVersionCheckbox from './ModuleVersionCheckbox.astro';
 
 export interface Props {
   repo: RepoOutput;
@@ -15,14 +16,15 @@ const modules = Object.entries(repo.modules)
   .filter(module => ODOO_VERSIONS.some(version => module.versions[version] != null))
   .sort((a, b) => a.internalName.localeCompare(b.internalName));
 
-function getLatestAvailableVersion(module: ModuleInfo): ModuleManifest {
+function getDescription(module: ModuleInfo): string {
   for (let i = ODOO_VERSIONS.length - 1; i >= 0; i--) {
     const version = ODOO_VERSIONS[i];
-    if (module.versions[version] != null) {
-      return module.versions[version];
+    const versionData = module.versions[version];
+    if (versionData && 'summary' in versionData) {
+      return versionData.summary;
     }
   }
-  throw new Error('Module has no available versions!');
+  return '';
 }
 ---
 
@@ -48,10 +50,10 @@ function getLatestAvailableVersion(module: ModuleInfo): ModuleManifest {
                   {module.internalName}
                 </a>
                 <br />
-                <span class="small text-muted">{getLatestAvailableVersion(module).summary}</span>
+                <span class="small text-muted">{getDescription(module)}</span>
               </td>
               {ODOO_VERSIONS.map(version => (
-                <td>{module.versions[version] ? '✅' : '❌'}</td>
+                <td><ModuleVersionCheckbox module={module.versions[version]} /></td>
               ))}
             </tr>
           ))}

@@ -24,6 +24,7 @@
     "@astrojs/ts-plugin": "^1.10.6",
     "@daniel15/standard": "file:../daniel15-standard/packages/standard",
     "@daniel15/standard-astro": "file:../daniel15-standard/packages/standard-astro",
+    "@types/bootstrap": "^5.2.10",
     "@types/node": "^25.2.0",
     "eslint": "^9.0.0",
     "jiti": "^2.6.1",

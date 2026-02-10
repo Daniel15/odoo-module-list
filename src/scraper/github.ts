@@ -1,7 +1,10 @@
 import {Octokit} from 'octokit';
+import type {MigrationPR} from '../schemas.ts';
 
 const ORG = 'OCA';
 const VERSION_BRANCH_RE = /^v?\d+\.0$/;
+const VERSION_RE = /\b(\d+\.0)\b/;
+const MODULE_NAME_RE = /\[MIG\]\s*(\w+)/i;
 
 let octokit: Octokit;
 
@@ -87,6 +90,64 @@ export async function getModulesInBranch(repo: string, branchSha: string): Promi
     }
   }
   return modules.sort();
+}
+
+export interface ParsedMigrationPR {
+  moduleName: string;
+  version: string;
+  pr: MigrationPR;
+}
+
+/**
+ * Get open migration PRs for a repo.
+ * Looks for PRs with "MIG" in the title and extracts version/module info.
+ */
+export async function getMigrationPRs(repo: string): Promise<ParsedMigrationPR[]> {
+  const prs: ParsedMigrationPR[] = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const {data} = await octokit.rest.pulls.list({
+      owner: ORG,
+      repo,
+      state: 'open',
+      per_page: 100,
+      page,
+    });
+
+    if (data.length === 0) {
+      hasMore = false;
+    }
+
+    for (const pr of data) {
+      if (!pr.title.toUpperCase().includes('MIG')) {
+        continue;
+      }
+
+      const versionMatch = VERSION_RE.exec(pr.title);
+      const moduleMatch = MODULE_NAME_RE.exec(pr.title);
+
+      if (!versionMatch || !moduleMatch) {
+        continue;
+      }
+
+      prs.push({
+        moduleName: moduleMatch[1],
+        version: versionMatch[1],
+        pr: {
+          title: pr.title,
+          url: pr.html_url,
+          createdAt: Math.floor(new Date(pr.created_at).getTime() / 1000),
+          updatedAt: Math.floor(new Date(pr.updated_at).getTime() / 1000),
+        },
+      });
+    }
+
+    page++;
+  }
+
+  return prs;
 }
 
 /**

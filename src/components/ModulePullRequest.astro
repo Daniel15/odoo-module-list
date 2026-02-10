@@ -1,0 +1,38 @@
+---
+import type {MigrationPR} from '../schemas';
+
+export interface Props {
+  pr: MigrationPR;
+}
+
+const {pr} = Astro.props;
+
+const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const tooltip =
+  `${pr.title}<br>` +
+  `Created ${dateFormatter.format(pr.createdAt * 1000)}<br>` +
+  `Last updated ${dateFormatter.format(pr.updatedAt * 1000)}`;
+---
+
+<a
+  class="migration-pr"
+  href={pr.url}
+  target="_blank"
+  data-bs-toggle="tooltip"
+  data-bs-title={tooltip}>🚧</a
+>
+
+<script>
+  import Tooltip from 'bootstrap/js/dist/tooltip';
+
+  document.querySelectorAll('.migration-pr').forEach(linkEl => {
+    new Tooltip(linkEl, {
+      html: true,
+    });
+  });
+</script>

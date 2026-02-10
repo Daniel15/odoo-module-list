@@ -14,5 +14,19 @@ const repos = (await getCollection('repos')).sort((a, b) => a.data.repo.localeCo
     easy reference to determine module version availability.
   </p>
 
+  <h4>Key</h4>
+  <ul class="key">
+    <li>✅: Module supports this version</li>
+    <li>🚧: Module does not yet support this version, but has an open migration PR</li>
+    <li>❌: Module does not support this version, and nobody is currently migrating it</li>
+  </ul>
+
   {repos.map(repo => <Repository repo={repo.data} />)}
 </Layout>
+
+<style>
+  ul.key {
+    list-style-type: none;
+    padding-inline-start: 0;
+  }
+</style>
