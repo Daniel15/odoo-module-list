@@ -1,7 +1,7 @@
 ---
 import {ODOO_VERSIONS} from '../consts';
-import type {ModuleInfo, RepoOutput} from '../schemas';
-import ModuleVersionCheckbox from './ModuleVersionCheckbox.astro';
+import type {RepoOutput} from '../schemas';
+import ModuleRow from './ModuleRow.astro';
 
 export interface Props {
   repo: RepoOutput;
@@ -17,17 +17,6 @@ const modules = Object.entries(repo.modules)
     ODOO_VERSIONS.some(version => module.versions[version] != null),
   )
   .sort((a, b) => a.internalName.localeCompare(b.internalName));
-
-function getDescription(module: ModuleInfo): string {
-  for (let i = ODOO_VERSIONS.length - 1; i >= 0; i--) {
-    const version = ODOO_VERSIONS[i];
-    const versionData = module.versions[version];
-    if (versionData && 'summary' in versionData) {
-      return versionData.summary;
-    }
-  }
-  return '';
-}
 ---
 
 {
@@ -46,20 +35,11 @@ function getDescription(module: ModuleInfo): string {
         </thead>
         <tbody>
           {modules.map(module => (
-            <tr>
-              <td>
-                <a href={repo.url} target="blank">
-                  {module.internalName}
-                </a>
-                <br />
-                <span class="small text-muted">{getDescription(module)}</span>
-              </td>
-              {ODOO_VERSIONS.map(version => (
-                <td>
-                  <ModuleVersionCheckbox module={module.versions[version]} />
-                </td>
-              ))}
-            </tr>
+            <ModuleRow
+              module={module}
+              internalName={module.internalName}
+              repo={repo}
+            />
           ))}
         </tbody>
       </table>

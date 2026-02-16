@@ -1,0 +1,43 @@
+---
+import {ODOO_VERSIONS} from '../consts';
+import type {ModuleInfo, ModuleManifest, RepoOutput} from '../schemas';
+import ModuleVersionCheckbox from './ModuleVersionCheckbox.astro';
+
+export interface Props {
+  module: ModuleInfo;
+  internalName: string;
+  repo: RepoOutput;
+}
+
+const {internalName, module, repo} = Astro.props;
+
+function getLatestManifest(module: ModuleInfo): ModuleManifest | null {
+  for (let i = ODOO_VERSIONS.length - 1; i >= 0; i--) {
+    const version = ODOO_VERSIONS[i];
+    const versionData = module.versions[version];
+    if (versionData && 'summary' in versionData) {
+      return versionData;
+    }
+  }
+  return null;
+}
+
+const latestManifest = getLatestManifest(module);
+---
+
+<tr>
+  <td>
+    <a href={latestManifest?.url ?? repo.url} target="blank">
+      {internalName}
+    </a>
+    <br />
+    <span class="small text-muted">{latestManifest?.summary}</span>
+  </td>
+  {
+    ODOO_VERSIONS.map(version => (
+      <td>
+        <ModuleVersionCheckbox module={module.versions[version]} />
+      </td>
+    ))
+  }
+</tr>
