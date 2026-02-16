@@ -1,0 +1,15 @@
+---
+import IndexLayout from '@layouts/IndexLayout.astro';
+import Repository from '@components/Repository.astro';
+import {getCollection} from 'astro:content';
+
+const repos = (await getCollection('repos')).sort((a, b) =>
+  a.data.repo.localeCompare(b.data.repo),
+);
+---
+
+<IndexLayout>
+  Group by: <a href="/">None</a> | <strong>Repository</strong>
+
+  {repos.map(repo => <Repository repo={repo.data} />)}
+</IndexLayout>
