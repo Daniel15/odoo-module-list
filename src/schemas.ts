@@ -14,6 +14,7 @@ export const moduleManifestSchema = z.object({
   author: z.string(),
   license: z.string(),
   category: z.string(),
+  url: z.string().url(),
 });
 
 export const moduleVersionSchema = z.union([

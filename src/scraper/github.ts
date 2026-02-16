@@ -1,7 +1,6 @@
 import {Octokit} from 'octokit';
 import type {MigrationPR} from '../schemas.ts';
 
-const ORG = 'OCA';
 const VERSION_BRANCH_RE = /^v?\d+\.0$/;
 const VERSION_RE = /\b(\d+\.0)\b/;
 const MODULE_NAME_RE = /\[MIG\]\s*(\w+)/i;
@@ -13,15 +12,15 @@ export function initOctokit(token: string) {
 }
 
 /**
- * List all non-archived, non-fork repos in the OCA org.
+ * List all non-archived, non-fork repos in an org.
  */
-export async function listRepos(): Promise<string[]> {
+export async function listRepos(org: string): Promise<string[]> {
   const repos: string[] = [];
   let page = 1;
   let hasMore = true;
   while (hasMore) {
     const {data} = await octokit.rest.repos.listForOrg({
-      org: ORG,
+      org,
       type: 'public',
       per_page: 100,
       page,
@@ -43,13 +42,16 @@ export async function listRepos(): Promise<string[]> {
 /**
  * Get version branches (matching vNN.0 pattern) for a repo.
  */
-export async function getVersionBranches(repo: string): Promise<{name: string; sha: string}[]> {
+export async function getVersionBranches(
+  owner: string,
+  repo: string,
+): Promise<{name: string; sha: string}[]> {
   const branches: {name: string; sha: string}[] = [];
   let page = 1;
   let hasMore = true;
   while (hasMore) {
     const {data} = await octokit.rest.repos.listBranches({
-      owner: ORG,
+      owner,
       repo,
       per_page: 100,
       page,
@@ -71,9 +73,13 @@ export async function getVersionBranches(repo: string): Promise<{name: string; s
  * Get the recursive file tree for a branch and return module directory names
  * (directories containing __manifest__.py at depth 1).
  */
-export async function getModulesInBranch(repo: string, branchSha: string): Promise<string[]> {
+export async function getModulesInBranch(
+  owner: string,
+  repo: string,
+  branchSha: string,
+): Promise<string[]> {
   const {data} = await octokit.rest.git.getTree({
-    owner: ORG,
+    owner,
     repo,
     tree_sha: branchSha,
     recursive: '1',
@@ -102,14 +108,17 @@ export interface ParsedMigrationPR {
  * Get open migration PRs for a repo.
  * Looks for PRs with "MIG" in the title and extracts version/module info.
  */
-export async function getMigrationPRs(repo: string): Promise<ParsedMigrationPR[]> {
+export async function getMigrationPRs(
+  owner: string,
+  repo: string,
+): Promise<ParsedMigrationPR[]> {
   const prs: ParsedMigrationPR[] = [];
   let page = 1;
   let hasMore = true;
 
   while (hasMore) {
     const {data} = await octokit.rest.pulls.list({
-      owner: ORG,
+      owner,
       repo,
       state: 'open',
       per_page: 100,

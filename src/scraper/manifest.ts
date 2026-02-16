@@ -7,17 +7,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PARSER_SCRIPT = join(__dirname, 'parse_manifest.py');
 
-const RAW_BASE = 'https://raw.githack.com/OCA';
-
 /**
  * Fetch a __manifest__.py file from raw.githack.com.
  */
 async function fetchManifestContent(
+  owner: string,
   repo: string,
   branch: string,
   module: string,
 ): Promise<string | null> {
-  const url = `${RAW_BASE}/${repo}/${branch}/${module}/__manifest__.py`;
+  const url = `https://raw.githack.com/${owner}/${repo}/${branch}/${module}/__manifest__.py`;
   const maxRetries = 3;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -80,7 +79,9 @@ function parseManifestContent(content: string): Promise<ModuleManifest | null> {
           'error' in parsed &&
           typeof (parsed as {error: unknown}).error === 'string'
         ) {
-          console.error(`Manifest parse error: ${(parsed as {error: string}).error}`);
+          console.error(
+            `Manifest parse error: ${(parsed as {error: string}).error}`,
+          );
           resolve(null);
           return;
         }
@@ -100,11 +101,12 @@ function parseManifestContent(content: string): Promise<ModuleManifest | null> {
  * Fetch and parse a module's __manifest__.py file.
  */
 export async function getModuleManifest(
+  owner: string,
   repo: string,
   branch: string,
   module: string,
 ): Promise<ModuleManifest | null> {
-  const content = await fetchManifestContent(repo, branch, module);
+  const content = await fetchManifestContent(owner, repo, branch, module);
   if (!content) {
     return null;
   }

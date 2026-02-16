@@ -3,7 +3,7 @@ import {glob} from 'astro/loaders';
 import {repoOutputSchema} from './schemas.ts';
 
 const repos = defineCollection({
-  loader: glob({pattern: '*.json', base: './data'}),
+  loader: glob({pattern: '**/*.json', base: './data'}),
   schema: repoOutputSchema,
 });
 
