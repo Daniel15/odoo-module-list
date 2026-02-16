@@ -1,59 +1,23 @@
 ---
-import {ODOO_VERSIONS} from '../consts';
 import type {RepoOutput} from '../schemas';
-import ModuleRow from './ModuleRow.astro';
+import ModuleTable from './ModuleTable.astro';
 
 export interface Props {
   repo: RepoOutput;
 }
 
 const {repo} = Astro.props;
-
-// Filter the modules to just the modules that are included in at least one of
-// the versions we want to show.
-const modules = Object.entries(repo.modules)
-  .map(([internalName, module]) => ({...module, internalName}))
-  .filter(module =>
-    ODOO_VERSIONS.some(version => module.versions[version] != null),
-  )
-  .sort((a, b) => a.internalName.localeCompare(b.internalName));
+const modules = Object.entries(repo.modules).map(([internalName, module]) => ({
+  ...module,
+  internalName,
+}));
 ---
 
 {
   modules.length > 0 && (
     <>
       <h2>{repo.repo}</h2>
-
-      <table class="table table-striped">
-        <thead>
-          <th scope="col">Name</th>
-          {ODOO_VERSIONS.map(version => (
-            <th class="version" scope="col">
-              v{version}
-            </th>
-          ))}
-        </thead>
-        <tbody>
-          {modules.map(module => (
-            <ModuleRow
-              module={module}
-              internalName={module.internalName}
-              repo={repo}
-            />
-          ))}
-        </tbody>
-      </table>
+      <ModuleTable modules={modules} />
     </>
   )
 }
-
-<style>
-  th.version {
-    width: 0;
-  }
-
-  thead {
-    position: sticky;
-    top: 0;
-  }
-</style>

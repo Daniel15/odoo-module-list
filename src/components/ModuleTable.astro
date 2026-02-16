@@ -1,0 +1,53 @@
+---
+import {ODOO_VERSIONS} from '../consts';
+import type {ModuleInfo} from '../schemas';
+import ModuleRow from './ModuleRow.astro';
+
+interface ModuleInfoWithInternalName extends ModuleInfo {
+  internalName: string;
+}
+
+export interface Props {
+  modules: readonly ModuleInfoWithInternalName[];
+}
+const {modules: modulesFromProps} = Astro.props;
+
+// Filter the modules to just the modules that are included in at least one of
+// the versions we want to show.
+const modules = modulesFromProps
+  .filter(module =>
+    ODOO_VERSIONS.some(version => module.versions[version] != null),
+  )
+  .sort((a, b) => a.internalName.localeCompare(b.internalName));
+---
+
+<table class="table table-striped">
+  <thead>
+    <th scope="col">Name</th>
+    {
+      ODOO_VERSIONS.map(version => (
+        <th class="version" scope="col">
+          v{version}
+        </th>
+      ))
+    }
+  </thead>
+  <tbody>
+    {
+      modules.map(module => (
+        <ModuleRow module={module} internalName={module.internalName} />
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  th.version {
+    width: 0;
+  }
+
+  thead {
+    position: sticky;
+    top: 0;
+  }
+</style>
