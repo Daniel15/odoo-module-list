@@ -19,37 +19,37 @@ const title =
 ---
 
 <!doctype html>
-<html lang="en" data-bs-theme="dark">
+<html data-bs-theme="dark" lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={canonicalURL} />
-    <meta name="generator" content={Astro.generator} />
+    <meta content="width=device-width,initial-scale=1" name="viewport" />
+    <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+    <link href={canonicalURL} rel="canonical" />
+    <meta content={Astro.generator} name="generator" />
 
     <title>{title}</title>
-    <meta name="title" content={title} />
-    <meta name="description" content={description} />
+    <meta content={title} name="title" />
+    <meta content={description} name="description" />
 
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={Astro.url} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta content="website" property="og:type" />
+    <meta content={Astro.url} property="og:url" />
+    <meta content={title} property="og:title" />
+    <meta content={description} property="og:description" />
     {
       image != null && (
-        <meta property="og:image" content={new URL(image.src, Astro.url)} />
+        <meta content={new URL(image.src, Astro.url)} property="og:image" />
       )
     }
 
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={Astro.url} />
-    <meta property="twitter:title" content={title} />
-    <meta property="twitter:description" content={description} />
+    <meta content="summary_large_image" property="twitter:card" />
+    <meta content={Astro.url} property="twitter:url" />
+    <meta content={title} property="twitter:title" />
+    <meta content={description} property="twitter:description" />
     {
       image != null && (
         <meta
-          property="twitter:image"
           content={new URL(image.src, Astro.url)}
+          property="twitter:image"
         />
       )
     }
@@ -70,9 +70,9 @@ const title =
 <script>
   import {init} from '@plausible-analytics/tracker';
   init({
+    captureOnLocalhost: window.location.search.includes('force_logging'),
     domain: 'odoomodules.com',
     endpoint: 'https://odoomodules.com/event',
     outboundLinks: true,
-    captureOnLocalhost: window.location.search.includes('force_logging'),
   });
 </script>

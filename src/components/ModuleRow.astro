@@ -1,11 +1,12 @@
 ---
-import {LATEST_ODOO_VERSION, ODOO_VERSIONS} from '../consts';
 import type {ModuleInfo, ModuleManifest} from '../schemas';
+
+import {LATEST_ODOO_VERSION, ODOO_VERSIONS} from '../consts';
 import ModuleVersionCheckbox from './ModuleVersionCheckbox.astro';
 
 export interface Props {
-  module: ModuleInfo;
   internalName: string;
+  module: ModuleInfo;
 }
 
 const {internalName, module} = Astro.props;

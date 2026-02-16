@@ -1,14 +1,12 @@
-import {defineConfig} from 'astro/config';
-
-import zlib from 'node:zlib';
-import purgecss from 'astro-purgecss';
 import compressor from 'astro-compressor';
+import purgecss from 'astro-purgecss';
+import {defineConfig} from 'astro/config';
+import zlib from 'node:zlib';
 
 export default defineConfig({
   build: {
     assets: '_build',
   },
-  site: process.env.SITE_URL ?? 'https://odoomodules.com/',
   integrations: [
     purgecss({
       keyframes: true,
@@ -28,6 +26,7 @@ export default defineConfig({
       },
     }),
   ],
+  site: process.env.SITE_URL ?? 'https://odoomodules.com/',
   vite: {
     css: {
       // https://getbootstrap.com/docs/5.3/getting-started/vite/#configure-vite

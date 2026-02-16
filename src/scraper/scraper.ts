@@ -1,18 +1,20 @@
 import {execSync} from 'node:child_process';
 import {mkdir, writeFile} from 'node:fs/promises';
-import {join, dirname} from 'node:path';
+import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
+
+import type {RepoOutput} from '../schemas.ts';
+
 import {
+  checkRateLimit,
+  getMigrationPRs,
+  getModulesInBranch,
+  getVersionBranches,
   initOctokit,
   listRepos,
-  getVersionBranches,
-  getModulesInBranch,
-  getMigrationPRs,
-  checkRateLimit,
   type ParsedMigrationPR,
 } from './github.ts';
 import {getModuleManifest} from './manifest.ts';
-import type {RepoOutput} from '../schemas.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,20 +26,25 @@ const CONCURRENCY = 50;
  * Configuration for sources to scrape.
  */
 interface ScraperConfig {
-  /** GitHub organizations to scrape all repos from */
-  orgs: string[];
   /** Additional individual repos to scrape (owner/repo format) */
   additionalRepos: string[];
+  /** GitHub organizations to scrape all repos from */
+  orgs: string[];
 }
 
 const CONFIG: ScraperConfig = {
-  orgs: ['OCA'],
   additionalRepos: [
     // Add additional repos here, e.g.:
     // 'acsone/some-repo',
     // 'camptocamp/other-repo',
   ],
+  orgs: ['OCA'],
 };
+
+interface RepoTask {
+  owner: string;
+  repo: string;
+}
 
 function getGhToken(): string {
   if (process.env.GITHUB_TOKEN) {
@@ -53,33 +60,58 @@ function getGhToken(): string {
   }
 }
 
-/**
- * Run async tasks with a concurrency limit.
- */
-async function runWithConcurrency<T>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<void>,
-): Promise<void> {
-  let index = 0;
-  const workers = Array.from(
-    {length: Math.min(limit, items.length)},
-    async () => {
-      while (index < items.length) {
-        const current = index++;
-        const item = items[current];
-        if (item !== undefined) {
-          await fn(item);
-        }
-      }
-    },
-  );
-  await Promise.all(workers);
-}
+async function main() {
+  const token = getGhToken();
+  initOctokit(token);
 
-interface RepoTask {
-  owner: string;
-  repo: string;
+  await mkdir(OUTPUT_DIR, {recursive: true});
+
+  const tasks: RepoTask[] = [];
+
+  // Collect repos from all configured orgs
+  for (const org of CONFIG.orgs) {
+    console.error(`Listing repos for ${org}...`);
+    const repos = await listRepos(org);
+    console.error(`Found ${String(repos.length)} repos in ${org}`);
+    for (const repo of repos) {
+      tasks.push({owner: org, repo});
+    }
+  }
+
+  // Add additional individual repos
+  for (const fullRepo of CONFIG.additionalRepos) {
+    const [owner, repo] = fullRepo.split('/');
+    if (owner && repo) {
+      tasks.push({owner, repo});
+    } else {
+      console.error(`Invalid repo format: ${fullRepo} (expected owner/repo)`);
+    }
+  }
+
+  console.error(`Total: ${String(tasks.length)} repos to process`);
+
+  let processed = 0;
+  await runWithConcurrency(tasks, CONCURRENCY, async task => {
+    processed++;
+    console.error(
+      `[${String(processed)}/${String(tasks.length)}] ${task.owner}/${task.repo}`,
+    );
+
+    try {
+      await processRepo(task);
+    } catch (err: unknown) {
+      console.error(
+        `  Error processing ${task.owner}/${task.repo}: ${String(err)}`,
+      );
+    }
+
+    // Periodically check rate limit
+    if (processed % 10 === 0) {
+      await checkRateLimit();
+    }
+  });
+
+  console.error('Done!');
 }
 
 async function processRepo(task: RepoTask): Promise<void> {
@@ -99,9 +131,9 @@ async function processRepo(task: RepoTask): Promise<void> {
   );
 
   const output: RepoOutput = {
+    modules: {},
     repo,
     url: `https://github.com/${owner}/${repo}`,
-    modules: {},
   };
 
   for (const branch of branches) {
@@ -175,58 +207,28 @@ async function processRepo(task: RepoTask): Promise<void> {
   }
 }
 
-async function main() {
-  const token = getGhToken();
-  initOctokit(token);
-
-  await mkdir(OUTPUT_DIR, {recursive: true});
-
-  const tasks: RepoTask[] = [];
-
-  // Collect repos from all configured orgs
-  for (const org of CONFIG.orgs) {
-    console.error(`Listing repos for ${org}...`);
-    const repos = await listRepos(org);
-    console.error(`Found ${String(repos.length)} repos in ${org}`);
-    for (const repo of repos) {
-      tasks.push({owner: org, repo});
-    }
-  }
-
-  // Add additional individual repos
-  for (const fullRepo of CONFIG.additionalRepos) {
-    const [owner, repo] = fullRepo.split('/');
-    if (owner && repo) {
-      tasks.push({owner, repo});
-    } else {
-      console.error(`Invalid repo format: ${fullRepo} (expected owner/repo)`);
-    }
-  }
-
-  console.error(`Total: ${String(tasks.length)} repos to process`);
-
-  let processed = 0;
-  await runWithConcurrency(tasks, CONCURRENCY, async task => {
-    processed++;
-    console.error(
-      `[${String(processed)}/${String(tasks.length)}] ${task.owner}/${task.repo}`,
-    );
-
-    try {
-      await processRepo(task);
-    } catch (err: unknown) {
-      console.error(
-        `  Error processing ${task.owner}/${task.repo}: ${String(err)}`,
-      );
-    }
-
-    // Periodically check rate limit
-    if (processed % 10 === 0) {
-      await checkRateLimit();
-    }
-  });
-
-  console.error('Done!');
+/**
+ * Run async tasks with a concurrency limit.
+ */
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  let index = 0;
+  const workers = Array.from(
+    {length: Math.min(limit, items.length)},
+    async () => {
+      while (index < items.length) {
+        const current = index++;
+        const item = items[current];
+        if (item !== undefined) {
+          await fn(item);
+        }
+      }
+    },
+  );
+  await Promise.all(workers);
 }
 
 main().catch((err: unknown) => {

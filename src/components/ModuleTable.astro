@@ -1,14 +1,15 @@
 ---
-import {ODOO_VERSIONS} from '../consts';
 import type {ModuleInfo} from '../schemas';
-import ModuleRow from './ModuleRow.astro';
 
-interface ModuleInfoWithInternalName extends ModuleInfo {
-  internalName: string;
-}
+import {ODOO_VERSIONS} from '../consts';
+import ModuleRow from './ModuleRow.astro';
 
 export interface Props {
   modules: readonly ModuleInfoWithInternalName[];
+}
+
+interface ModuleInfoWithInternalName extends ModuleInfo {
+  internalName: string;
 }
 const {modules: modulesFromProps} = Astro.props;
 
@@ -35,7 +36,7 @@ const modules = modulesFromProps
   <tbody>
     {
       modules.map(module => (
-        <ModuleRow module={module} internalName={module.internalName} />
+        <ModuleRow internalName={module.internalName} module={module} />
       ))
     }
   </tbody>

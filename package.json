@@ -24,8 +24,8 @@
   },
   "devDependencies": {
     "@astrojs/ts-plugin": "^1.10.6",
-    "@daniel15/standard": "1.0.0",
-    "@daniel15/standard-astro": "1.0.0",
+    "@daniel15/standard": "1.1.0",
+    "@daniel15/standard-astro": "1.1.0",
     "@types/bootstrap": "^5.2.10",
     "@types/node": "^25.2.0",
     "eslint": "^9.0.0",

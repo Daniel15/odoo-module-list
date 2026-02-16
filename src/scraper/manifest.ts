@@ -1,11 +1,28 @@
 import {spawn} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+
 import type {ModuleManifest} from '../schemas.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const PARSER_SCRIPT = join(__dirname, 'parse_manifest.py');
+
+/**
+ * Fetch and parse a module's __manifest__.py file.
+ */
+export async function getModuleManifest(
+  owner: string,
+  repo: string,
+  branch: string,
+  module: string,
+): Promise<ModuleManifest | null> {
+  const content = await fetchManifestContent(owner, repo, branch, module);
+  if (!content) {
+    return null;
+  }
+  return parseManifestContent(content);
+}
 
 /**
  * Fetch a __manifest__.py file from raw.githack.com.
@@ -15,7 +32,7 @@ async function fetchManifestContent(
   repo: string,
   branch: string,
   module: string,
-): Promise<string | null> {
+): Promise<null | string> {
   const url = `https://raw.githack.com/${owner}/${repo}/${branch}/${module}/__manifest__.py`;
   const maxRetries = 3;
 
@@ -95,20 +112,4 @@ function parseManifestContent(content: string): Promise<ModuleManifest | null> {
     proc.stdin.write(content);
     proc.stdin.end();
   });
-}
-
-/**
- * Fetch and parse a module's __manifest__.py file.
- */
-export async function getModuleManifest(
-  owner: string,
-  repo: string,
-  branch: string,
-  module: string,
-): Promise<ModuleManifest | null> {
-  const content = await fetchManifestContent(owner, repo, branch, module);
-  if (!content) {
-    return null;
-  }
-  return parseManifestContent(content);
 }

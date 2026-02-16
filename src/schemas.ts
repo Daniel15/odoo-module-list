@@ -1,20 +1,20 @@
 import {z} from 'zod';
 
 export const migrationPRSchema = z.object({
-  title: z.string(),
-  url: z.string().url(),
   createdAt: z.number(),
+  title: z.string(),
   updatedAt: z.number(),
+  url: z.string().url(),
 });
 
 export const moduleManifestSchema = z.object({
+  author: z.string(),
+  category: z.string(),
+  license: z.string(),
   name: z.string(),
   summary: z.string(),
-  version: z.string(),
-  author: z.string(),
-  license: z.string(),
-  category: z.string(),
   url: z.string().url(),
+  version: z.string(),
 });
 
 export const moduleVersionSchema = z.union([
@@ -27,13 +27,13 @@ export const moduleInfoSchema = z.object({
 });
 
 export const repoOutputSchema = z.object({
+  modules: z.record(z.string(), moduleInfoSchema),
   repo: z.string(),
   url: z.string().url(),
-  modules: z.record(z.string(), moduleInfoSchema),
 });
 
 export type MigrationPR = z.infer<typeof migrationPRSchema>;
+export type ModuleInfo = z.infer<typeof moduleInfoSchema>;
 export type ModuleManifest = z.infer<typeof moduleManifestSchema>;
 export type ModuleVersion = z.infer<typeof moduleVersionSchema>;
-export type ModuleInfo = z.infer<typeof moduleInfoSchema>;
 export type RepoOutput = z.infer<typeof repoOutputSchema>;

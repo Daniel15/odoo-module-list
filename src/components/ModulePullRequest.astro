@@ -8,9 +8,9 @@ export interface Props {
 const {pr} = Astro.props;
 
 const dateFormatter = new Intl.DateTimeFormat('en-CA', {
-  year: 'numeric',
-  month: '2-digit',
   day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
 });
 
 const tooltip =
@@ -21,10 +21,10 @@ const tooltip =
 
 <a
   class="migration-pr"
-  href={pr.url}
-  target="_blank"
+  data-bs-title={tooltip}
   data-bs-toggle="tooltip"
-  data-bs-title={tooltip}>🚧</a
+  href={pr.url}
+  target="_blank">🚧</a
 >
 
 <script>
