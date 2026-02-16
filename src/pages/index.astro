@@ -3,18 +3,12 @@ import ModuleTable from '@components/ModuleTable.astro';
 import IndexLayout from '@layouts/IndexLayout.astro';
 import {getCollection} from 'astro:content';
 
-const modules = (await getCollection('repos'))
-  .flatMap(repo =>
-    Object.entries(repo.data.modules).map(([internalName, module]) => ({
-      ...module,
-      internalName,
-    })),
-  )
-  .filter(
-    // Filter out some bad data.
-    // TODO: Do this in the scraper
-    module => module.internalName !== '18' && module.internalName !== 'account',
-  );
+const modules = (await getCollection('repos')).flatMap(repo =>
+  Object.entries(repo.data.modules).map(([internalName, module]) => ({
+    ...module,
+    internalName,
+  })),
+);
 ---
 
 <IndexLayout>

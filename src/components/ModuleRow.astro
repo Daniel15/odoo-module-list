@@ -1,5 +1,5 @@
 ---
-import {ODOO_VERSIONS} from '../consts';
+import {LATEST_ODOO_VERSION, ODOO_VERSIONS} from '../consts';
 import type {ModuleInfo, ModuleManifest} from '../schemas';
 import ModuleVersionCheckbox from './ModuleVersionCheckbox.astro';
 
@@ -11,8 +11,10 @@ export interface Props {
 const {internalName, module} = Astro.props;
 
 function getLatestManifest(module: ModuleInfo): ModuleManifest | null {
-  for (let i = ODOO_VERSIONS.length - 1; i >= 0; i--) {
-    const version = ODOO_VERSIONS[i];
+  // Start at the latest version, and work backwards until we find a manifest
+  // for the specified module.
+  for (let i = parseInt(LATEST_ODOO_VERSION, 10); i > 1; i--) {
+    const version = `${i}.0`;
     const versionData = module.versions[version];
     if (versionData && 'summary' in versionData) {
       return versionData;
@@ -24,25 +26,25 @@ function getLatestManifest(module: ModuleInfo): ModuleManifest | null {
 const latestManifest = getLatestManifest(module);
 ---
 
-<tr>
-  <td>
-    {
-      latestManifest?.url == null ? (
-        internalName
-      ) : (
-        <a href={latestManifest?.url} target="blank">
-          {internalName}
-        </a>
-      )
-    }
-    <br />
-    <span class="small text-muted">{latestManifest?.summary}</span>
-  </td>
-  {
-    ODOO_VERSIONS.map(version => (
+{
+  latestManifest == null ? null : (
+    <tr>
       <td>
-        <ModuleVersionCheckbox module={module.versions[version]} />
+        {latestManifest?.url == null ? (
+          internalName
+        ) : (
+          <a href={latestManifest?.url} target="blank">
+            {internalName}
+          </a>
+        )}
+        <br />
+        <span class="small text-muted">{latestManifest?.summary}</span>
       </td>
-    ))
-  }
-</tr>
+      {ODOO_VERSIONS.map(version => (
+        <td>
+          <ModuleVersionCheckbox module={module.versions[version]} />
+        </td>
+      ))}
+    </tr>
+  )
+}
