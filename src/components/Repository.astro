@@ -13,7 +13,9 @@ const {repo} = Astro.props;
 // the versions we want to show.
 const modules = Object.entries(repo.modules)
   .map(([internalName, module]) => ({...module, internalName}))
-  .filter(module => ODOO_VERSIONS.some(version => module.versions[version] != null))
+  .filter(module =>
+    ODOO_VERSIONS.some(version => module.versions[version] != null),
+  )
   .sort((a, b) => a.internalName.localeCompare(b.internalName));
 
 function getDescription(module: ModuleInfo): string {
@@ -53,7 +55,9 @@ function getDescription(module: ModuleInfo): string {
                 <span class="small text-muted">{getDescription(module)}</span>
               </td>
               {ODOO_VERSIONS.map(version => (
-                <td><ModuleVersionCheckbox module={module.versions[version]} /></td>
+                <td>
+                  <ModuleVersionCheckbox module={module.versions[version]} />
+                </td>
               ))}
             </tr>
           ))}

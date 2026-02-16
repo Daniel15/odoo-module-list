@@ -3,22 +3,30 @@ import Repository from '@components/Repository.astro';
 import Layout from '@layouts/Layout.astro';
 import {getCollection} from 'astro:content';
 
-const repos = (await getCollection('repos')).sort((a, b) => a.data.repo.localeCompare(b.data.repo));
+const repos = (await getCollection('repos')).sort((a, b) =>
+  a.data.repo.localeCompare(b.data.repo),
+);
 ---
 
 <Layout description="Odoo module listing">
   <h1>Odoo Modules</h1>
 
   <p>
-    This list contains all OCA modules along with the Odoo versions they support. Use this as an
-    easy reference to determine module version availability.
+    This list contains all OCA modules along with the Odoo versions they
+    support. Use this as an easy reference to determine module version
+    availability.
   </p>
 
   <h4>Key</h4>
   <ul class="key">
     <li>✅: Module supports this version</li>
-    <li>🚧: Module does not yet support this version, but has an open migration PR</li>
-    <li>❌: Module does not support this version, and nobody is currently migrating it</li>
+    <li>
+      🚧: Module does not yet support this version, but has an open migration PR
+    </li>
+    <li>
+      ❌: Module does not support this version, and nobody is currently
+      migrating it
+    </li>
   </ul>
 
   {repos.map(repo => <Repository repo={repo.data} />)}
