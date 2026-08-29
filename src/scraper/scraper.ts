@@ -33,11 +33,7 @@ interface ScraperConfig {
 }
 
 const CONFIG: ScraperConfig = {
-  additionalRepos: [
-    // Add additional repos here, e.g.:
-    // 'acsone/some-repo',
-    // 'camptocamp/other-repo',
-  ],
+  additionalRepos: ['Daniel15/odoo-modules', 'apexive/odoo-llm'],
   orgs: ['OCA'],
 };
 
