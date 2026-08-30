@@ -1,11 +1,11 @@
 import {glob} from 'astro/loaders';
 import {defineCollection} from 'astro:content';
 
-import {repoOutputSchema} from './schemas.ts';
+import {moduleInfoSchema} from './schemas';
 
-const repos = defineCollection({
-  loader: glob({base: './data', pattern: '**/*.json'}),
-  schema: repoOutputSchema,
+const modules = defineCollection({
+  loader: glob({base: './data', pattern: '*.json'}),
+  schema: moduleInfoSchema,
 });
 
-export const collections = {repos};
+export const collections = {modules};

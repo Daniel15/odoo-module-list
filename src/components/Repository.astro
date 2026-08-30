@@ -1,23 +1,20 @@
 ---
-import type {RepoOutput} from '../schemas';
+import type {ModuleInfo} from '../schemas';
 
 import ModuleTable from './ModuleTable.astro';
 
 export interface Props {
-  repo: RepoOutput;
+  modules: readonly ModuleInfo[];
+  repo: string;
 }
 
-const {repo} = Astro.props;
-const modules = Object.entries(repo.modules).map(([internalName, module]) => ({
-  ...module,
-  internalName,
-}));
+const {modules, repo} = Astro.props;
 ---
 
 {
   modules.length > 0 && (
     <>
-      <h2>{repo.repo}</h2>
+      <h2>{repo}</h2>
       <ModuleTable modules={modules} />
     </>
   )

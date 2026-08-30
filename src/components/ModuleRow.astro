@@ -5,11 +5,10 @@ import {LATEST_ODOO_VERSION, ODOO_VERSIONS} from '../consts';
 import ModuleVersionCheckbox from './ModuleVersionCheckbox.astro';
 
 export interface Props {
-  internalName: string;
   module: ModuleInfo;
 }
 
-const {internalName, module} = Astro.props;
+const {module} = Astro.props;
 
 function getLatestManifest(module: ModuleInfo): ModuleManifest | null {
   // Start at the latest version, and work backwards until we find a manifest
@@ -31,11 +30,11 @@ const latestManifest = getLatestManifest(module);
   latestManifest == null ? null : (
     <tr>
       <td>
-        {latestManifest?.url == null ? (
-          internalName
+        {latestManifest?.repositoryURL == null ? (
+          module.id
         ) : (
-          <a href={latestManifest?.url} target="blank">
-            {internalName}
+          <a href={latestManifest?.repositoryURL} target="blank">
+            {module.id}
           </a>
         )}
         <br />

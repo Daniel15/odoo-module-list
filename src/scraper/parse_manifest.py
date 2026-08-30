@@ -5,7 +5,7 @@ import ast
 import json
 import sys
 
-FIELDS = ("name", "summary", "version", "author", "license", "category")
+FIELDS = ("name", "depends", "summary", "version", "author", "license", "category")
 
 
 def main():
@@ -23,7 +23,12 @@ def main():
     result = {}
     for field in FIELDS:
         value = data.get(field, "")
-        result[field] = str(value) if value is not None else ""
+        if field == "depends":
+            if isinstance(value, str):
+                value = [value] if value else []
+            elif not isinstance(value, (list, tuple)):
+                value = []
+        result[field] = value if value is not None else ""
 
     json.dump(result, sys.stdout)
 

@@ -5,12 +5,9 @@ import {ODOO_VERSIONS} from '../consts';
 import ModuleRow from './ModuleRow.astro';
 
 export interface Props {
-  modules: readonly ModuleInfoWithInternalName[];
+  modules: readonly ModuleInfo[];
 }
 
-interface ModuleInfoWithInternalName extends ModuleInfo {
-  internalName: string;
-}
 const {modules: modulesFromProps} = Astro.props;
 
 // Filter the modules to just the modules that are included in at least one of
@@ -19,7 +16,7 @@ const modules = modulesFromProps
   .filter(module =>
     ODOO_VERSIONS.some(version => module.versions[version] != null),
   )
-  .sort((a, b) => a.internalName.localeCompare(b.internalName));
+  .sort((a, b) => a.id.localeCompare(b.id));
 ---
 
 <table class="table table-striped">
@@ -34,11 +31,7 @@ const modules = modulesFromProps
     }
   </thead>
   <tbody>
-    {
-      modules.map(module => (
-        <ModuleRow internalName={module.internalName} module={module} />
-      ))
-    }
+    {modules.map(module => <ModuleRow module={module} />)}
   </tbody>
 </table>
 

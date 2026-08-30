@@ -3,12 +3,7 @@ import ModuleTable from '@components/ModuleTable.astro';
 import IndexLayout from '@layouts/IndexLayout.astro';
 import {getCollection} from 'astro:content';
 
-const modules = (await getCollection('repos')).flatMap(repo =>
-  Object.entries(repo.data.modules).map(([internalName, module]) => ({
-    ...module,
-    internalName,
-  })),
-);
+const modules = (await getCollection('modules')).map(module => module.data);
 ---
 
 <IndexLayout>

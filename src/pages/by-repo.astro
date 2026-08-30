@@ -3,13 +3,22 @@ import Repository from '@components/Repository.astro';
 import IndexLayout from '@layouts/IndexLayout.astro';
 import {getCollection} from 'astro:content';
 
-const repos = (await getCollection('repos')).sort((a, b) =>
-  a.data.repo.localeCompare(b.data.repo),
+import {groupBy, sortByKey} from '../utils/map';
+
+const modulesByRepo = sortByKey(
+  groupBy(
+    (await getCollection('modules')).map(module => module.data),
+    module => module.repo,
+  ),
 );
 ---
 
 <IndexLayout>
   Group by: <a href="/">None</a> | <strong>Repository</strong>
 
-  {repos.map(repo => <Repository repo={repo.data} />)}
+  {
+    modulesByRepo
+      .entries()
+      .map(([repo, modules]) => <Repository modules={modules} repo={repo} />)
+  }
 </IndexLayout>

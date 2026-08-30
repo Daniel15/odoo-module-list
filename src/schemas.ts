@@ -7,15 +7,25 @@ export const migrationPRSchema = z.object({
   url: z.string().url(),
 });
 
-export const moduleManifestSchema = z.object({
+// Manifest directly from __manifest__.py
+export const rawModuleManifestSchema = z.object({
   author: z.string(),
   category: z.string(),
+  depends: z.array(z.string()).optional(),
   license: z.string(),
   name: z.string(),
   summary: z.string(),
-  url: z.string().url(),
   version: z.string(),
+  website: z.string().url().optional(),
 });
+
+// Manifest with extra fields added by the scraper (e.g. repository_url)
+export const moduleManifestSchema = rawModuleManifestSchema
+  .omit({website: true})
+  .extend({
+    repositoryURL: z.string().url(),
+    websiteURL: z.string().url().optional(),
+  });
 
 export const moduleVersionSchema = z.union([
   moduleManifestSchema,
@@ -23,17 +33,15 @@ export const moduleVersionSchema = z.union([
 ]);
 
 export const moduleInfoSchema = z.object({
-  versions: z.record(z.string(), moduleVersionSchema),
-});
-
-export const repoOutputSchema = z.object({
-  modules: z.record(z.string(), moduleInfoSchema),
+  generatedAt: z.number(),
+  generatedAtReadable: z.string().datetime(),
+  id: z.string(),
   repo: z.string(),
-  url: z.string().url(),
+  versions: z.record(z.string(), moduleVersionSchema),
 });
 
 export type MigrationPR = z.infer<typeof migrationPRSchema>;
 export type ModuleInfo = z.infer<typeof moduleInfoSchema>;
 export type ModuleManifest = z.infer<typeof moduleManifestSchema>;
 export type ModuleVersion = z.infer<typeof moduleVersionSchema>;
-export type RepoOutput = z.infer<typeof repoOutputSchema>;
+export type RawModuleManifest = z.infer<typeof rawModuleManifestSchema>;

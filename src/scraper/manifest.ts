@@ -2,7 +2,7 @@ import {spawn} from 'node:child_process';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-import type {ModuleManifest} from '../schemas.ts';
+import {type RawModuleManifest, rawModuleManifestSchema} from '../schemas.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,7 +16,7 @@ export async function getModuleManifest(
   repo: string,
   branch: string,
   module: string,
-): Promise<ModuleManifest | null> {
+): Promise<null | RawModuleManifest> {
   const content = await fetchManifestContent(owner, repo, branch, module);
   if (!content) {
     return null;
@@ -66,7 +66,9 @@ async function fetchManifestContent(
 /**
  * Parse manifest content by piping it through the Python helper script.
  */
-function parseManifestContent(content: string): Promise<ModuleManifest | null> {
+function parseManifestContent(
+  content: string,
+): Promise<null | RawModuleManifest> {
   return new Promise(resolve => {
     const proc = spawn('python3', [PARSER_SCRIPT], {
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -89,22 +91,25 @@ function parseManifestContent(content: string): Promise<ModuleManifest | null> {
         return;
       }
       try {
-        const parsed: unknown = JSON.parse(stdout);
+        const json: unknown = JSON.parse(stdout);
         if (
-          typeof parsed === 'object' &&
-          parsed !== null &&
-          'error' in parsed &&
-          typeof (parsed as {error: unknown}).error === 'string'
+          typeof json === 'object' &&
+          json !== null &&
+          'error' in json &&
+          typeof (json as {error: unknown}).error === 'string'
         ) {
           console.error(
-            `Manifest parse error: ${(parsed as {error: string}).error}`,
+            `Manifest parse error: ${(json as {error: string}).error}`,
           );
           resolve(null);
           return;
         }
-        resolve(parsed as ModuleManifest);
-      } catch {
-        console.error(`Invalid JSON from parser: ${stdout}`);
+
+        resolve(rawModuleManifestSchema.parse(json));
+      } catch (ex: unknown) {
+        console.error(
+          `Invalid JSON from parser: ${stdout}. Error: ${ex instanceof Error ? ex.message : String(ex)}`,
+        );
         resolve(null);
       }
     });
