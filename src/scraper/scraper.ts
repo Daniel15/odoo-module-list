@@ -1,10 +1,11 @@
 import {execSync} from 'node:child_process';
-import {mkdir, readdir, unlink, writeFile} from 'node:fs/promises';
+import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+import {mkdir, rm} from 'node:fs/promises';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-import type {ModuleInfo} from '../schemas.ts';
-
+import {type ModuleInfo, moduleInfoSchema} from '../schemas.ts';
+import {sortByKey} from '../utils/objectAsMap.ts';
 import {
   checkRateLimit,
   getMigrationPRs,
@@ -61,6 +62,8 @@ async function main() {
   const token = getGhToken();
   initOctokit(token);
 
+  // Clear old data
+  await rm(OUTPUT_DIR, {recursive: true});
   await mkdir(OUTPUT_DIR, {recursive: true});
 
   const tasks: RepoTask[] = [];
@@ -110,20 +113,7 @@ async function main() {
     }
   });
 
-  // Delete modules that no longer exist
-  const dataFiles = await readdir(OUTPUT_DIR);
-  for (const file of dataFiles) {
-    if (!file.endsWith('.json')) {
-      continue;
-    }
-    const moduleID = file.replace(/\.json$/, '');
-    if (!moduleIDs.has(moduleID)) {
-      console.error(`Deleting data for module that no longer exists: ${file}`);
-      await unlink(join(OUTPUT_DIR, file));
-    }
-  }
-
-  console.error('Done!');
+  console.error(`Done! ${String(moduleIDs.size)} modules found.`);
 }
 
 /**
@@ -232,12 +222,9 @@ async function processRepo(task: RepoTask): Promise<ReadonlySet<string>> {
   }
 
   if (moduleInfo.size > 0) {
-    await Promise.allSettled(
-      moduleInfo.values().map(async module => {
-        const outputPath = join(OUTPUT_DIR, module.id + '.json');
-        await writeFile(outputPath, JSON.stringify(module, null, 2) + '\n');
-      }),
-    );
+    for (const module of moduleInfo.values()) {
+      writeModuleToJSON(module);
+    }
     console.error(
       `  Wrote ${String(moduleInfo.size)} modules for ${owner}/${repo}`,
     );
@@ -270,6 +257,28 @@ async function runWithConcurrency<T>(
     },
   );
   await Promise.all(workers);
+}
+
+function writeModuleToJSON(module: ModuleInfo) {
+  // These file operations are *intentionally* synchronous so this can serve as a
+  // synchronization point in case a module exists across multiple repos (e.g. if
+  // it was moved from one repo to another).
+
+  const outputPath = join(OUTPUT_DIR, `${module.id}.json`);
+  const moduleToSave = module;
+  if (existsSync(outputPath)) {
+    const existingModule = moduleInfoSchema.parse(
+      JSON.parse(readFileSync(outputPath, 'utf-8')),
+    );
+    console.log(
+      `    WARNING: ${module.id} exists in both ${existingModule.repo} and ${module.repo}. Merging versions.`,
+    );
+    moduleToSave.versions = sortByKey({
+      ...existingModule.versions,
+      ...moduleToSave.versions,
+    });
+  }
+  writeFileSync(outputPath, JSON.stringify(moduleToSave, null, 2) + '\n');
 }
 
 main().catch((err: unknown) => {
