@@ -16,13 +16,13 @@ import {
   type ParsedMigrationPR,
 } from './github.ts';
 import {getModuleManifest} from './manifest.ts';
+import {getGeneratedAtFields} from '../json.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const OUTPUT_DIR = join(__dirname, '..', '..', 'data');
 
 const CONCURRENCY = 50;
-const MS_PER_SEC = 1000;
 
 /**
  * Configuration for sources to scrape.
@@ -137,19 +137,12 @@ async function processRepo(task: RepoTask): Promise<ReadonlySet<string>> {
   const moduleInfo = new Map<string, ModuleInfo>();
 
   function getModuleInfo(mod: string): ModuleInfo {
-    // TODO: Use getOrInsert here, after upgrading TypeScript
-    let thisModuleInfo = moduleInfo.get(mod);
-    if (thisModuleInfo == null) {
-      thisModuleInfo = {
-        generatedAt: Math.floor(Date.now() / MS_PER_SEC),
-        generatedAtReadable: new Date().toISOString(),
-        id: mod,
-        repo: `${owner}/${repo}`,
-        versions: {},
-      };
-      moduleInfo.set(mod, thisModuleInfo);
-    }
-    return thisModuleInfo;
+    return moduleInfo.getOrInsert(mod, {
+      ...getGeneratedAtFields(),
+      id: mod,
+      repo: `${owner}/${repo}`,
+      versions: {},
+    });
   }
 
   for (const branch of branches) {

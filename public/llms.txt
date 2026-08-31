@@ -1,0 +1,14 @@
+# Odoo Modules
+
+This site contains a list of open-source modules available for Odoo.
+
+## JSON Data
+
+You can download either a small JSON file with a summary of all modules (then download data about individual modules separately), or download a JSON file containing all data:
+
+- The smaller index: https://odoomodules.com/modules.json (~1.1 MB)
+  Schema: https://odoomodules.com/schemas/modules.json
+  Follow the "item" link to get details for an individual module.
+
+- All data in one file: https://odoomodules.com/modules-full.json (~8.6 MB)
+  Schema: https://odoomodules.com/schemas/modules-full.json

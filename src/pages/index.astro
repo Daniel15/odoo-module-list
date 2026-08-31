@@ -7,6 +7,9 @@ const modules = (await getCollection('modules')).map(module => module.data);
 ---
 
 <IndexLayout>
-  Group by: <strong>None</strong> | <a href="/by-repo">Repository</a>
+  <p>
+    <a download href="/modules-full.json">Download all data as JSON</a> (~8.6 MB)
+  </p>
+  <p>Group by: <strong>None</strong> | <a href="/by-repo">Repository</a></p>
   <ModuleTable modules={modules} />
 </IndexLayout>
